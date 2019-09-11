@@ -1,11 +1,13 @@
 pub mod auth;
 pub mod err;
+pub mod short_link;
 
 mod utils;
 
+use crate::db::tiny_link::{NewTinyLink, TinyLink};
 use actix_session::Session;
-use actix_web::{HttpResponse, Result};
-use serde::{Deserialize, Serialize};
+use actix_web::{web, HttpResponse, Result};
+use uuid::Uuid;
 
 /// TODO: move to model
 #[derive(Serialize, Deserialize, Debug, PartialEq)]

@@ -1,6 +1,10 @@
-use crate::model::tiny_link::{NewTinyLink, TinyLink};
+pub mod tiny_link;
+pub mod user;
+
+use std::ops::Deref;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
+use tiny_link::{NewTinyLink, TinyLink};
 
 pub type PgPool = Pool<ConnectionManager<PgConnection>>;
 type PgPooledConnection = PooledConnection<ConnectionManager<PgConnection>>;
@@ -14,17 +18,12 @@ fn get_conn(pool: &PgPool) -> Result<PgPooledConnection, &'static str> {
     pool.get().map_err(|_| "Can't get connection")
 }
 
-pub fn create_tiny_link(todo: String, pool: &PgPool) -> Result<(), &'static str> {
-    Ok(())
+pub fn create_tiny_link(link: NewTinyLink, pool: &PgPool) -> Result<(), &'static str> {
+    TinyLink::insert(link, get_conn(pool)?.deref()).map(|_|()).map_err(|_| "Error inserting tiny_link")
 }
 
-pub fn find_tiny_link(id: i32, pool: &PgPool) -> Result<TinyLink, &'static str> {
-    Ok(TinyLink {
-        id: String::from("id"),
-        tiny: String::from("tiny"),
-        origin: String::from("origin"),
-        user_id: String::from(""),
-    })
+pub fn find_tiny_link(id: &str, pool: &PgPool) -> Result<TinyLink, &'static str> {
+    TinyLink::query_by_id(id, get_conn(pool)?.deref()).map_err(|_| "Error inserting tiny_link")
 }
 
 pub fn delete_tiny_link(id: i32, pool: &PgPool) -> Result<(), &'static str> {

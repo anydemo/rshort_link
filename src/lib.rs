@@ -47,6 +47,7 @@ pub fn run(config: Arc<Config>) -> Result<(), Box<dyn Error>> {
         App::new()
             .data(db_pool.clone())
             .data(gql_shma.clone())
+            .data(web::JsonConfig::default().limit(4096))
             .wrap(Logger::default())
             .wrap(RedisSession::new(&config.redis_link, &[0; 32]))
             .wrap(error_handlers)
@@ -57,14 +58,29 @@ pub fn run(config: Arc<Config>) -> Result<(), Box<dyn Error>> {
             ))
             .service(web::resource("/login").route(web::post().to(api::auth::back_door_handler)))
             .service(web::resource("/logout").to(api::auth::logout))
-            .service(web::resource("/").route(web::get().to(api::index)))
+            // .service(web::resource("/").route(web::get().to(api::index)))
             // init graphql endpoint
             .service(web::resource("/graphql").route(web::post().to_async(gql_api::graphql)))
             .service(web::resource("/graphiql").route(web::get().to(gql_api::graphiql)))
+            .service(
+                web::scope("/api")
+                    .service(
+                        web::resource("/gen")
+                            .route(web::post().to(api::short_link::generate_short_link)),
+                    )
+                    .service(
+                        web::resource("/origin/{link_id}")
+                            .route(web::get().to(api::short_link::redirect_from_short_link)),
+                    ),
+            )
     };
 
     info!("Starting server listen on {}", &run_config.listen_on);
-    if let Err(err) = HttpServer::new(app).bind(&run_config.listen_on)?.run() {
+    if let Err(err) = HttpServer::new(app)
+        .workers(2)
+        .bind(&run_config.listen_on)?
+        .run()
+    {
         error!("err: {}", err);
     }
     Ok(())
@@ -95,7 +111,6 @@ impl Config {
 #[cfg(test)]
 mod test_run {
     use super::*;
-    use std::process;
     #[test]
     fn test_run() {
         let config = Config::new();

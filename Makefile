@@ -9,7 +9,7 @@ build:
 .PHONY: gen
 gen:
 	bash scripts/openapi-generator-cli.sh generate \
-	-i openapi/t.yaml \
+	-i openapi/store.yaml \
 	-g rust-server \
 	-o ./openapi/genapi
 
