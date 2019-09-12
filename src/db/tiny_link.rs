@@ -1,11 +1,11 @@
-use uuid::Uuid;
-use serde_derive::{Deserialize, Serialize};
-use diesel::prelude::*;
-use diesel::pg::PgConnection;
 use crate::schema::{
     tiny_link,
-    tiny_link::dsl::{id, tiny_link as all_tiny_link,},
+    tiny_link::dsl::{id, tiny_link as all_tiny_link},
 };
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+use serde_derive::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Deserialize, Serialize, Queryable, Debug, PartialEq)]
 pub struct TinyLink {
@@ -16,8 +16,8 @@ pub struct TinyLink {
 }
 
 impl TinyLink {
-    pub fn all(conn: &PgConnection) -> QueryResult<Vec<TinyLink>> {
-        all_tiny_link.order(tiny_link::id.desc()).load::<TinyLink>(conn)
+    pub fn all(conn: &PgConnection) -> QueryResult<Vec<Self>> {
+        all_tiny_link.order(tiny_link::id.desc()).load::<Self>(conn)
     }
 
     pub fn insert(link: NewTinyLink, conn: &PgConnection) -> QueryResult<usize> {
@@ -25,8 +25,8 @@ impl TinyLink {
             .values(&link)
             .execute(conn)
     }
-    pub fn query_by_id(target_id: &str, conn: &PgConnection) ->QueryResult<TinyLink> {
-        all_tiny_link.filter(id.eq(target_id)).first::<TinyLink>(conn)
+    pub fn query_by_id(target_id: &str, conn: &PgConnection) -> QueryResult<Self> {
+        all_tiny_link.filter(id.eq(target_id)).first::<Self>(conn)
     }
 }
 
@@ -40,7 +40,7 @@ pub struct NewTinyLink<'a> {
 }
 
 impl<'a> NewTinyLink<'a> {
-    pub fn new(link: &'a str, user_id: &Option<String>) -> NewTinyLink<'a> {
+    pub fn new(link: &'a str, user_id: &Option<String>) -> Self {
         let tiny_id: String = Uuid::new_v4().to_string();
         NewTinyLink::<'a> {
             id: tiny_id.clone(),

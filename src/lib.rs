@@ -28,7 +28,7 @@ pub fn run(config: Arc<Config>) -> Result<(), Box<dyn Error>> {
     let run_config = Arc::clone(&config);
     debug!("input config = {:?}", run_config);
 
-    let db_pool = db::init_pool(&config.db_link).expect("Failed to create pool");
+    let db_pool = db::init_pool(&config.db_link).expect("Failed to create db pool");
     let gql_shma = std::sync::Arc::new(create_schema());
 
     let app_config = Arc::clone(&config);
@@ -49,21 +49,23 @@ pub fn run(config: Arc<Config>) -> Result<(), Box<dyn Error>> {
             .data(gql_shma.clone())
             .data(web::JsonConfig::default().limit(4096))
             .wrap(Logger::default())
-            .wrap(RedisSession::new(&config.redis_link, &[0; 32]))
+            .wrap(RedisSession::new(&config.redis_session_link, &[0; 32]))
             .wrap(error_handlers)
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(&[0; 32])
                     .name("rshort_link_auth")
                     .secure(false),
             ))
-            .service(web::resource("/login").route(web::post().to(api::auth::back_door_handler)))
             .service(web::resource("/logout").to(api::auth::logout))
-            // .service(web::resource("/").route(web::get().to(api::index)))
+            .service(web::resource("/").route(web::get().to(api::index)))
             // init graphql endpoint
             .service(web::resource("/graphql").route(web::post().to_async(gql_api::graphql)))
             .service(web::resource("/graphiql").route(web::get().to(gql_api::graphiql)))
             .service(
                 web::scope("/api")
+                    .service(
+                        web::resource("/login").route(web::post().to(api::auth::back_door_handler)),
+                    )
                     .service(
                         web::resource("/gen")
                             .route(web::post().to(api::short_link::generate_short_link)),
@@ -77,7 +79,7 @@ pub fn run(config: Arc<Config>) -> Result<(), Box<dyn Error>> {
 
     info!("Starting server listen on {}", &run_config.listen_on);
     if let Err(err) = HttpServer::new(app)
-        .workers(2)
+        // .workers(2)
         .bind(&run_config.listen_on)?
         .run()
     {
@@ -89,7 +91,7 @@ pub fn run(config: Arc<Config>) -> Result<(), Box<dyn Error>> {
 #[derive(Debug)]
 pub struct Config {
     pub db_link: String,
-    pub redis_link: String,
+    pub redis_session_link: String,
     pub listen_on: String,
 }
 
@@ -102,8 +104,9 @@ impl Config {
         info!("====== env end =======");
         Ok(Arc::new(Config {
             db_link: env::var("DATABASE_URL").expect("DATABASE_URL must be set"),
-            redis_link: env::var("REDIS_URL").expect("REDIS_URL must be set"),
-            listen_on: env::var("LISTEN_ON").unwrap_or(String::from("127.0.0.1:8088")),
+            redis_session_link: env::var("REDIS_SESSION_URL")
+                .expect("REDIS_SESSION_URL must be set"),
+            listen_on: env::var("LISTEN_ON").unwrap_or_else(|_| String::from("127.0.0.1:8088")),
         }))
     }
 }

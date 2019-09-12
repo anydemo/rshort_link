@@ -1,9 +1,9 @@
 pub mod tiny_link;
 pub mod user;
 
-use std::ops::Deref;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool, PoolError, PooledConnection};
+use std::ops::Deref;
 use tiny_link::{NewTinyLink, TinyLink};
 
 pub type PgPool = Pool<ConnectionManager<PgConnection>>;
@@ -19,15 +19,13 @@ fn get_conn(pool: &PgPool) -> Result<PgPooledConnection, &'static str> {
 }
 
 pub fn create_tiny_link(link: NewTinyLink, pool: &PgPool) -> Result<(), &'static str> {
-    TinyLink::insert(link, get_conn(pool)?.deref()).map(|_|()).map_err(|_| "Error inserting tiny_link")
+    TinyLink::insert(link, get_conn(pool)?.deref())
+        .map(|_| ())
+        .map_err(|_| "Error inserting tiny_link")
 }
 
 pub fn find_tiny_link(id: &str, pool: &PgPool) -> Result<TinyLink, &'static str> {
     TinyLink::query_by_id(id, get_conn(pool)?.deref()).map_err(|_| "Error inserting tiny_link")
-}
-
-pub fn delete_tiny_link(id: i32, pool: &PgPool) -> Result<(), &'static str> {
-    Ok(())
 }
 
 #[cfg(test)]

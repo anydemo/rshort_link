@@ -12,7 +12,7 @@ These instructions will get you a copy of the project up and running on your loc
 What things you need to install the software and how to install them
 
 ```
-Give examples
+make
 ```
 
 ### Installing
@@ -22,16 +22,27 @@ A step by step series of examples that tell you how to get a development env run
 Say what the step will be
 
 ```
-Give the example
+cp .env.example .env
+docker-compose up -d
 ```
 
 And repeat
 
 ```
-until finished
+make
+make run
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
+```
+outpub:
+
+[2019-09-12T00:51:12Z DEBUG rshort_link] input config = Config { db_link: "postgres://postgres:postgres@localhost/rshort_link", redis_session_link: "127.0.0.1:6379", listen_on: "127.0.0.1:8088" }
+[2019-09-12T00:51:12Z INFO  rshort_link] Starting server listen on 127.0.0.1:8088
+[2019-09-12T00:51:12Z DEBUG rshort_link] Constructing the App
+[2019-09-12T00:51:12Z DEBUG rshort_link] Constructing the App
+[2019-09-12T00:51:12Z DEBUG rshort_link] Constructing the App
+[2019-09-12T00:51:12Z DEBUG rshort_link] Constructing the App
+```
 
 ## Running the tests
 
@@ -45,24 +56,16 @@ Explain what these tests test and why
 Give an example
 ```
 
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
 ## Deployment
 
 Add additional notes about how to deploy this on a live system
 
 ### TODO
-* [ ] log
-* [ ] web
+* [x] log
+* [x] web
 * [ ] short_link utils
-* [ ] postgres with orm
-* [ ] parse input args
+* [x] postgres with orm
+* [ ] cache
 
 ## Built With
 
